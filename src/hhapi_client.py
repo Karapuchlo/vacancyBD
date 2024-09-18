@@ -1,5 +1,5 @@
 import requests
-from vacancy import Vacancy
+from src.vacancy import Vacancy
 
 class HHAPIClient:
     """Клиент для работы с API hh.ru"""

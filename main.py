@@ -19,13 +19,35 @@ def main():
         password="240615Nastya"
     )
     cursor = conn.cursor()
+    # Проверяем существование таблицы "companies"
     cursor.execute("""
+        SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.tables
+            WHERE table_name = 'companies'
+        );
+    """)
+    companies_table_exists = cursor.fetchone()[0]
+    if not companies_table_exists:
+        cursor.execute("""
             CREATE TABLE companies (
                 id SERIAL PRIMARY KEY,
                 company_name TEXT NOT NULL
             )
         """)
+        conn.commit()
+
+    # Проверяем существование таблицы "vacancies"
     cursor.execute("""
+        SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.tables
+            WHERE table_name = 'vacancies'
+        );
+    """)
+    vacancies_table_exists = cursor.fetchone()[0]
+    if not vacancies_table_exists:
+        cursor.execute("""
             CREATE TABLE vacancies (
                 id SERIAL PRIMARY KEY,
                 company_id INT NOT NULL,
@@ -35,7 +57,8 @@ def main():
                 FOREIGN KEY (company_id) REFERENCES companies(id)
             )
         """)
-    conn.commit()
+        conn.commit()
+
     cursor.close()
     conn.close()
 
