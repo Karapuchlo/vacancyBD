@@ -1,7 +1,7 @@
 import psycopg2
 
-from hhapi_client import HHAPIClient
-from db_manager import DBManager
+from src.hhapi_client import HHAPIClient
+from src.db_manager import DBManager
 
 def main():
     # Настройка подключения к API hh.ru
