@@ -1,14 +1,24 @@
 import requests
+from typing import List
 from src.vacancy import Vacancy
 
+
 class HHAPIClient:
-    """Клиент для работы с API hh.ru"""
-    def __init__(self, api_url, headers):
+    """
+    Клиент для работы с API hh.ru.
+    """
+
+    def __init__(self, api_url: str, headers: dict):
         self.api_url = api_url
         self.headers = headers
 
-    def fetch_vacancies(self):
-        """Получение вакансий для указанной компании"""
+    def fetch_vacancies(self) -> List[Vacancy]:
+        """
+        Получение вакансий для указанных параметров.
+
+        Returns:
+            List[Vacancy]: Список вакансий.
+        """
         vacancies = []
         for i in range(10):
             params = {

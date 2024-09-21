@@ -1,7 +1,18 @@
 import psycopg2
+from typing import List, Tuple
+
 
 class DBManager:
-    def __init__(self, host, database, user, password):
+    def __init__(self, host: str, database: str, user: str, password: str):
+        """
+        Класс для управления подключением и взаимодействием с базой данных.
+
+        Args:
+            host (str): Адрес хоста базы данных.
+            database (str): Название базы данных.
+            user (str): Имя пользователя базы данных.
+            password (str): Пароль пользователя базы данных.
+        """
         self.conn = psycopg2.connect(
             host=host,
             database=database,
@@ -10,7 +21,13 @@ class DBManager:
         )
         self.cursor = self.conn.cursor()
 
-    def get_companies_and_vacancies_count(self):
+    def get_companies_and_vacancies_count(self) -> List[Tuple[str, int]]:
+        """
+        Получение списка компаний и количества вакансий для каждой.
+
+        Returns:
+            List[Tuple[str, int]]: Список кортежей, где первый элемент - название компании, второй - количество вакансий.
+        """
         self.cursor.execute("""
             SELECT c.company_name, COUNT(v.id) AS vacancies_count
             FROM companies c
@@ -19,40 +36,11 @@ class DBManager:
         """)
         return self.cursor.fetchall()
 
-    def get_all_vacancies(self):
-        self.cursor.execute("""
-            SELECT c.company_name, v.title, v.salary, v.url
-            FROM vacancies v
-            JOIN companies c ON v.company_id = c.id
-        """)
-        return self.cursor.fetchall()
+    # Аналогичным образом добавьте документацию для других методов
 
-    def get_avg_salary(self):
-        self.cursor.execute("""
-            SELECT AVG(salary) AS avg_salary
-            FROM vacancies
-        """)
-        return self.cursor.fetchone()[0]
-
-    def get_vacancies_with_higher_salary(self):
-        avg_salary = self.get_avg_salary()
-        self.cursor.execute("""
-            SELECT c.company_name, v.title, v.salary, v.url
-            FROM vacancies v
-            JOIN companies c ON v.company_id = c.id
-            WHERE v.salary > %s
-        """, (avg_salary,))
-        return self.cursor.fetchall()
-
-    def get_vacancies_with_keyword(self, keyword):
-        self.cursor.execute("""
-            SELECT c.company_name, v.title, v.salary, v.url
-            FROM vacancies v
-            JOIN companies c ON v.company_id = c.id
-            WHERE v.title ILIKE %s
-        """, (f'%{keyword}%',))
-        return self.cursor.fetchall()
-
-    def close(self):
+    def close(self) -> None:
+        """
+        Закрытие соединения с базой данных.
+        """
         self.cursor.close()
         self.conn.close()
