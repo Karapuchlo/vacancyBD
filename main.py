@@ -1,9 +1,10 @@
 import os
-
+from dotenv import load_dotenv
 from src.db_manager import DBManager
 from src.hhapi_client import HHAPIClient
 
-
+# Загружаем переменные среды из .env файла
+load_dotenv()
 def main():
     # Настройка подключения к API hh.ru
     api_url = 'https://api.hh.ru/vacancies'
