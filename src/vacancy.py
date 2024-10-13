@@ -2,7 +2,7 @@ class Vacancy:
     def __init__(self, employer_name, name, salary, alternate_url):
         self.employer_name = employer_name
         self.name = name
-        self.salary = salary
+        self.salary = salary if salary is not None else "Не указана"
         self.alternate_url = alternate_url
 
     def __str__(self):

@@ -1,3 +1,8 @@
+from typing import List, Tuple
+import psycopg2
+import requests
+
+from src.vacancy import Vacancy
 class HHAPIClient:
     """
     Клиент для работы с API hh.ru.
@@ -17,13 +22,20 @@ class HHAPIClient:
         self.headers = headers
 
     def fetch_vacancies(self) -> List[Vacancy]:
-        """
-        Получение вакансий для указанных параметров.
-
-        Returns:
-            List[Vacancy]: Список вакансий.
-        """
-        # Код метода fetch_vacancies
+        try:
+            response = requests.get(self.api_url, headers=self.headers)
+            response.raise_for_status()
+            data = response.json()
+            vacancies = data.get('items', [])
+            return [Vacancy(
+                employer_name=v['employer']['name'],
+                name=v['name'],
+                salary=v.get('salary', {}).get('from', 'Не указана'),
+                alternate_url=v['alternate_url']
+            ) for v in vacancies]
+        except requests.exceptions.RequestException as e:
+            print(f"Не удалось получить вакансии из API hh.ru: {e}")
+            return None
 
 class DBManager:
     """
@@ -58,10 +70,26 @@ class DBManager:
         Returns:
             List[Tuple[str, int]]: Список кортежей, где первый элемент - название компании, второй - количество вакансий.
         """
-        # Код метода get_companies_and_vacancies_count
+        try:
+            self.cursor.execute("""
+                SELECT employer_name, COUNT(*) as vacancies_count
+                FROM vacancies
+                GROUP BY employer_name
+                ORDER BY vacancies_count DESC;
+            """)
+            result = self.cursor.fetchall()
+            return result
+        except psycopg2.Error as e:
+            print(f"Ошибка при получении информации о компаниях и вакансиях: {e}")
+            return []
 
     def close(self) -> None:
         """
         Закрытие соединения с базой данных.
         """
-        # Код метода close
+        try:
+            self.cursor.close()
+            self.conn.commit()
+            self.conn.close()
+        except psycopg2.Error as e:
+            print(f"Ошибка при закрытии соединения с базой данных: {e}")

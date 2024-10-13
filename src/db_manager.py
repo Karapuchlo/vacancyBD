@@ -21,6 +21,44 @@ class DBManager:
         )
         self.cursor = self.conn.cursor()
 
+    def create_database_structure(self):
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS companies (
+                id SERIAL PRIMARY KEY,
+                company_name TEXT NOT NULL
+            );
+        """)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS vacancies (
+                id SERIAL PRIMARY KEY,
+                title TEXT NOT NULL,
+                description TEXT,
+                company_id INTEGER NOT NULL,
+                FOREIGN KEY (company_id) REFERENCES companies(id)
+            );
+        """)
+        self.conn.commit()
+
+    def insert_companies_and_vacancies(self, companies_and_vacancies):
+        for company_name, vacancies in companies_and_vacancies:
+            self.cursor.execute("""
+                INSERT INTO companies (company_name)
+                VALUES (%s)
+                ON CONFLICT (company_name) DO NOTHING;
+            """, (company_name,))
+
+            company_id = self.cursor.execute("""
+                SELECT id FROM companies WHERE company_name = %s
+            """, (company_name,)).fetchone()[0]
+
+            for vacancy in vacancies:
+                self.cursor.execute("""
+                    INSERT INTO vacancies (title, description, company_id)
+                    VALUES (%s, %s, %s)
+                """, (vacancy.title, vacancy.description, company_id))
+
+        self.conn.commit()
+
     def get_companies_and_vacancies_count(self) -> List[Tuple[str, int]]:
         """
         Получение списка компаний и количества вакансий для каждой.
