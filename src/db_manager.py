@@ -40,22 +40,31 @@ class DBManager:
         self.conn.commit()
 
     def insert_companies_and_vacancies(self, companies_and_vacancies):
-        for company_name, vacancies in companies_and_vacancies:
-            self.cursor.execute("""
-                INSERT INTO companies (company_name)
-                VALUES (%s)
-                ON CONFLICT (company_name) DO NOTHING;
-            """, (company_name,))
-
-            company_id = self.cursor.execute("""
-                SELECT id FROM companies WHERE company_name = %s
-            """, (company_name,)).fetchone()[0]
-
-            for vacancy in vacancies:
+        for item in companies_and_vacancies:
+            if isinstance(item, tuple) and len(item) == 2:
+                company_name, vacancies = item
                 self.cursor.execute("""
-                    INSERT INTO vacancies (title, description, company_id)
-                    VALUES (%s, %s, %s)
-                """, (vacancy.title, vacancy.description, company_id))
+                    INSERT INTO companies (company_name)
+                    VALUES (%s)
+                    ON CONFLICT (company_name) DO NOTHING;
+                """, (company_name,))
+
+                company_id = self.cursor.execute("""
+                    SELECT id FROM companies WHERE company_name = %s
+                """, (company_name,)).fetchone()[0]
+
+                # Проверка на то, что vacancies - это итерируемый объект
+                if isinstance(vacancies, list):
+                    for vacancy in vacancies:
+                        self.cursor.execute("""
+                            INSERT INTO vacancies (title, description, company_id)
+                            VALUES (%s, %s, %s)
+                        """, (vacancy.title, vacancy.description, company_id))
+                else:
+                    print(f"Ошибка: вакансии для компании {company_name} должны быть списком.")
+            else:
+                print(
+                    "Ошибка: каждый элемент в companies_and_vacancies должен быть кортежем из (имя компании, список вакансий)")
 
         self.conn.commit()
 
