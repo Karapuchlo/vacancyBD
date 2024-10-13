@@ -25,17 +25,29 @@ class HHAPIClient:
         try:
             response = requests.get(self.api_url, headers=self.headers)
             response.raise_for_status()
+
             data = response.json()
-            vacancies = data.get('items', [])
-            return [Vacancy(
-                employer_name=v['employer']['name'],
-                name=v['name'],
-                salary=v.get('salary', {}).get('from', 'Не указана'),
-                alternate_url=v['alternate_url']
-            ) for v in vacancies]
-        except requests.exceptions.RequestException as e:
-            print(f"Не удалось получить вакансии из API hh.ru: {e}")
-            return None
+            vacancies_data = data.get('items', [])
+
+            return [
+                Vacancy(
+                    employer_name=v.get('employer', {}).get('name', 'Не указано'),
+                    name=v.get('name', 'Не указана'),
+                    salary=v.get('salary', {}).get('from', 'Не указана') if v.get(
+                        'salary') is not None else 'Не указана',
+                    alternate_url=v.get('alternate_url', 'Не указан')
+                )
+                for v in vacancies_data
+                if v is not None  # Проверяем, что v не None
+            ]
+
+        except requests.RequestException as e:
+            print(f"Ошибка при получении вакансий: {e}")
+            return []  # Лучше вернуть пустой список
+
+        except ValueError as e:
+            print(f"Ошибка с преобразованием JSON: {e}")
+            return []  # Также возвращаем пустой список при ошибке JSON
 
 class DBManager:
     """
