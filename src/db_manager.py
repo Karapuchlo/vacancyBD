@@ -1,6 +1,8 @@
 import psycopg2
 from typing import List, Tuple
 
+from src.vacancy import Vacancy
+
 
 class DBManager:
     def __init__(self, host: str, database: str, user: str, password: str):
@@ -39,32 +41,33 @@ class DBManager:
         """)
         self.conn.commit()
 
+    def add_vacancy_to_database(self, vacancy):
+        def add_vacancy_to_database(self, vacancy):
+            cursor = self.connection.cursor()
+            cursor.execute('''
+                INSERT INTO vacancies (company, title, salary, url)
+                VALUES (?, ?, ?, ?)''', (vacancy['company'], vacancy['title'], vacancy['salary'], vacancy['url']))
+        self.conn.commit()
+
     def insert_companies_and_vacancies(self, companies_and_vacancies):
-        for item in companies_and_vacancies:
-            if isinstance(item, tuple) and len(item) == 2:
-                company_name, vacancies = item
-                self.cursor.execute("""
-                    INSERT INTO companies (company_name)
-                    VALUES (%s)
-                    ON CONFLICT (company_name) DO NOTHING;
-                """, (company_name,))
+        from src.vacancy import Vacancy  # Импортируем здесь, чтобы избежать циклического импорта
+        company: object
+        for company in companies_and_vacancies:
+            if 'name' not in company or 'vacancies' not in company:
+                print(f"Ошибка: неверный формат данных для компании: {company}. Ожидались поля 'name' и 'vacancies'.")
+                continue
 
-                company_id = self.cursor.execute("""
-                    SELECT id FROM companies WHERE company_name = %s
-                """, (company_name,)).fetchone()[0]
+            employer_name = company['name']
+            vacancies = company['vacancies']
 
-                # Проверка на то, что vacancies - это итерируемый объект
-                if isinstance(vacancies, list):
-                    for vacancy in vacancies:
-                        self.cursor.execute("""
-                            INSERT INTO vacancies (title, description, company_id)
-                            VALUES (%s, %s, %s)
-                        """, (vacancy.title, vacancy.description, company_id))
-                else:
-                    print(f"Ошибка: вакансии для компании {company_name} должны быть списком.")
-            else:
-                print(
-                    "Ошибка: каждый элемент в companies_and_vacancies должен быть кортежем из (имя компании, список вакансий)")
+            if not isinstance(vacancies, list):
+                print(f"Ожидался список вакансий для компании {employer_name}, но получено: {vacancies}.")
+                continue
+
+            for vacancy in vacancies:
+                self.add_vacancy_to_database(vacancy)
+
+            print(f"Вакансии для компании '{employer_name}' успешно добавлены.")
 
         self.conn.commit()
 
