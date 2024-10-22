@@ -30,11 +30,11 @@ def main():
     )
     db_manager.create_database_structure()
     # Представьте, что у вас есть список вакансий, как уже показано
-    vacancies = [
-        Vacancy('Компания A', 'Разработчик', '50000', 'http://example.com/a'),
-        Vacancy('Компания B', 'Тестировщик', '40000', 'http://example.com/b'),
-        Vacancy('Компания A', 'Системный администратор', '60000', 'http://example.com/a_sysadmin')
-    ]
+    #vacancies = [
+     #   Vacancy('Компания A', 'Разработчик', '50000', 'http://example.com/a'),
+      #  Vacancy('Компания B', 'Тестировщик', '40000', 'http://example.com/b'),
+       # Vacancy('Компания A', 'Системный администратор', '60000', 'http://example.com/a_sysadmin')
+    #]
 
     # Группируем вакансии по компаниям
     companies_dict = {}
@@ -54,7 +54,7 @@ def main():
     db_manager.insert_companies_and_vacancies(companies_list)
 
     # Не забудьте закрыть соединение
-    db_manager.close()
+    # db_manager.close()
 
     # Получение информации о компаниях и количестве вакансий
     companies_and_vacancies_count = db_manager.get_companies_and_vacancies_count()
